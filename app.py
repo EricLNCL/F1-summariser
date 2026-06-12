@@ -1,4 +1,5 @@
 import os
+import datetime
 import fastf1
 import streamlit as st
 import matplotlib.pyplot as plt
@@ -13,6 +14,34 @@ client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 st.title("F1 賽事報告")
 
+RACE_DATES = {
+    2026: {
+        "Bahrain Grand Prix": datetime.date(2026, 3, 22),
+        "Saudi Arabian Grand Prix": datetime.date(2026, 3, 29),
+        "Australian Grand Prix": datetime.date(2026, 4, 5),
+        "Japanese Grand Prix": datetime.date(2026, 4, 19),
+        "Chinese Grand Prix": datetime.date(2026, 5, 3),
+        "Miami Grand Prix": datetime.date(2026, 5, 10),
+        "Monaco Grand Prix": datetime.date(2026, 6, 1),
+        "Barcelona Grand Prix": datetime.date(2026, 6, 14),
+        "Austrian Grand Prix": datetime.date(2026, 6, 28),
+        "British Grand Prix": datetime.date(2026, 7, 5),
+        "Belgian Grand Prix": datetime.date(2026, 7, 19),
+        "Hungarian Grand Prix": datetime.date(2026, 7, 26),
+        "Dutch Grand Prix": datetime.date(2026, 8, 23),
+        "Italian Grand Prix": datetime.date(2026, 9, 6),
+        "Spanish Grand Prix": datetime.date(2026, 9, 13),
+        "Azerbaijan Grand Prix": datetime.date(2026, 9, 20),
+        "Singapore Grand Prix": datetime.date(2026, 10, 4),
+        "United States Grand Prix": datetime.date(2026, 10, 18),
+        "Mexico City Grand Prix": datetime.date(2026, 10, 25),
+        "São Paulo Grand Prix": datetime.date(2026, 11, 8),
+        "Las Vegas Grand Prix": datetime.date(2026, 11, 21),
+        "Qatar Grand Prix": datetime.date(2026, 11, 28),
+        "Abu Dhabi Grand Prix": datetime.date(2026, 12, 6),
+    }
+}
+
 @st.cache_data
 def get_races(year):
     schedule = fastf1.get_event_schedule(year, include_testing=False)
@@ -25,7 +54,13 @@ with col2:
     races = get_races(year)
     race = st.selectbox("場次", races)
 
-if st.button("產生賽事報告"):
+today = datetime.date.today()
+race_date = RACE_DATES.get(year, {}).get(race)
+
+if race_date and race_date > today:
+    st.warning(f"⚠️ 此場比賽尚未進行，預定於 {race_date.strftime('%Y年%m月%d日')} 舉行。")
+
+elif st.button("產生賽事報告"):
 
     with st.spinner("載入賽事資料中..."):
         session = fastf1.get_session(year, race, 'R')
