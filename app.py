@@ -35,7 +35,7 @@ RACE_DATES = {
         "Singapore Grand Prix": datetime.date(2026, 10, 4),
         "United States Grand Prix": datetime.date(2026, 10, 18),
         "Mexico City Grand Prix": datetime.date(2026, 10, 25),
-        "São Paulo Grand Prix": datetime.date(2026, 11, 8),
+        "Sao Paulo Grand Prix": datetime.date(2026, 11, 8),
         "Las Vegas Grand Prix": datetime.date(2026, 11, 21),
         "Qatar Grand Prix": datetime.date(2026, 11, 28),
         "Abu Dhabi Grand Prix": datetime.date(2026, 12, 6),
@@ -58,7 +58,7 @@ today = datetime.date.today()
 race_date = RACE_DATES.get(year, {}).get(race)
 
 if race_date and race_date > today:
-    st.warning(f"⚠️ 此場比賽尚未進行，預定於 {race_date.strftime('%Y年%m月%d日')} 舉行。")
+    st.warning(f"此場比賽尚未進行，預定於 {race_date.strftime('%Y年%m月%d日')} 舉行。")
 
 elif st.button("產生賽事報告"):
 
