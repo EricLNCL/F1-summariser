@@ -36,7 +36,7 @@ if st.button("產生賽事報告"):
             weather=False,
             messages=support_laps
         )
-        results = session.results[['Abbreviation', 'TeamName', 'Position', 'Status']].copy()
+        results = session.results[['Abbreviation', 'FullName', 'TeamName', 'Position', 'Status']].copy()
         results['Position'] = results['Position'].astype(str)
         if support_laps:
             laps = session.laps
@@ -112,14 +112,16 @@ if st.button("產生賽事報告"):
 你是一位 F1 賽事記者，請根據以下 {year} {race} GP 的真實資料，
 用繁體中文寫一篇約 400 字的詳細賽事報告。
 
+注意：請使用資料中的 FullName 欄位作為車手全名，不要自行猜測或替換車手姓名。
+
 報告需要包含：
-1. 比賽結果前三名
+1. 比賽結果前三名（請使用完整姓名）
 2. 各車手的輪胎策略（如有資料）
 3. 安全車、旗號與事故（如有資料）
 4. 任何判罰或關鍵事件
 5. 比賽中的名次變化亮點
 
-最終成績：
+最終成績（包含完整姓名）：
 {results_text}
 
 Pit Stop 與輪胎資料：
