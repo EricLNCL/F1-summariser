@@ -92,8 +92,8 @@ elif st.button("產生賽事報告"):
             fastest_sec = fastest.dt.total_seconds()
             fig, ax = plt.subplots(figsize=(10, 5))
             ax.barh(fastest_sec.index, fastest_sec.values, color='#e10600')
-            ax.set_xlabel('秒數')
-            ax.set_title('各車手最快圈速')
+            ax.set_xlabel('Seconds')
+            ax.set_title('Fastest Lap by Driver')
             ax.invert_yaxis()
             st.pyplot(fig)
         except Exception as e:
