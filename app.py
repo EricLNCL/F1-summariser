@@ -7,7 +7,6 @@ import pandas as pd
 from groq import Groq
 
 matplotlib.rcParams['font.family'] = 'Arial Unicode MS'
-import os
 os.makedirs('cache', exist_ok=True)
 fastf1.Cache.enable_cache('cache')
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
@@ -28,7 +27,6 @@ with col2:
 
 if st.button("產生賽事報告"):
 
-    # 載入資料
     with st.spinner("載入賽事資料中..."):
         session = fastf1.get_session(year, race, 'R')
         support_laps = year >= 2018
@@ -40,9 +38,11 @@ if st.button("產生賽事報告"):
         )
         results = session.results[['Abbreviation', 'TeamName', 'Position', 'Status']].copy()
         results['Position'] = results['Position'].astype(str)
-        laps = session.laps if support_laps else None
+        if support_laps:
+            laps = session.laps
+        else:
+            laps = None
 
-    # 最終成績
     st.subheader("最終成績")
     st.dataframe(results, width=800)
 
@@ -51,7 +51,6 @@ if st.button("產生賽事報告"):
 
     if laps is not None:
 
-        # 圈速圖表
         st.subheader("各車手最快圈速")
         try:
             fastest = laps.groupby('Driver')['LapTime'].min().dropna().sort_values()
@@ -65,7 +64,6 @@ if st.button("產生賽事報告"):
         except Exception as e:
             st.warning(f"圈速資料無法顯示：{e}")
 
-        # 名次變化
         st.subheader("名次變化")
         try:
             position_changes = []
@@ -86,7 +84,6 @@ if st.button("產生賽事報告"):
         except Exception as e:
             st.warning(f"名次資料無法顯示：{e}")
 
-        # Pit Stop 策略
         st.subheader("Pit Stop 策略")
         try:
             pit_laps = laps[laps['PitOutTime'].notna()][['Driver', 'LapNumber', 'Compound']].dropna()
@@ -95,7 +92,6 @@ if st.button("產生賽事報告"):
         except Exception as e:
             st.warning(f"Pit Stop 資料無法顯示：{e}")
 
-        # 事故與安全車
         try:
             race_control = session.race_control_messages
             incidents = race_control[
@@ -110,7 +106,6 @@ if st.button("產生賽事報告"):
     else:
         st.info("2017 年以前的圈速、Pit Stop、事故資料不支援，僅顯示最終成績與賽事報告。")
 
-    # AI 報告
     st.subheader("賽事報告")
     results_text = results.to_string()
     prompt = f"""
@@ -133,7 +128,7 @@ Pit Stop 與輪胎資料：
 事故與安全車：
 {penalty_text}
 """
-    with st.spinner("AI 正在撰寫報告..."):
+    with st.spinner("正在撰寫賽事報告..."):
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}]
