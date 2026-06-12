@@ -7,6 +7,8 @@ import pandas as pd
 from groq import Groq
 
 matplotlib.rcParams['font.family'] = 'Arial Unicode MS'
+import os
+os.makedirs('cache', exist_ok=True)
 fastf1.Cache.enable_cache('cache')
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
