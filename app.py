@@ -64,7 +64,7 @@ elif st.button("產生賽事報告"):
         session = fastf1.get_session(year, race, 'R')
         support_laps = year >= 2018
         session.load(laps=support_laps, telemetry=False, weather=False, messages=support_laps)
-        results = session.results[['Abbreviation', 'FullName', 'TeamName', 'Position', 'Status']].copy()
+        results = session.results[['Abbreviation', 'FullName', 'TeamName', 'Position', 'Status', 'FastestLapTime']].copy()
         results['Position'] = results['Position'].astype(str)
         try:
             laps = session.laps if support_laps else None
@@ -72,27 +72,26 @@ elif st.button("產生賽事報告"):
             laps = None
 
     st.subheader("最終成績")
-    st.dataframe(results, width=800)
+    st.dataframe(results.drop(columns=['FastestLapTime']), width=800)
+
+    st.subheader("各車手最快圈速")
+    try:
+        fastest_data = results[['Abbreviation', 'FastestLapTime']].dropna().copy()
+        fastest_data['Seconds'] = fastest_data['FastestLapTime'].dt.total_seconds()
+        fastest_data = fastest_data.sort_values('Seconds')
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.barh(fastest_data['Abbreviation'], fastest_data['Seconds'], color='#e10600')
+        ax.set_xlabel('Seconds')
+        ax.set_title('Fastest Lap by Driver')
+        ax.invert_yaxis()
+        st.pyplot(fig)
+    except Exception as e:
+        st.warning(f"圈速資料無法顯示：{e}")
 
     pit_text = "無資料"
     penalty_text = "無資料"
 
     if laps is not None:
-
-        st.subheader("各車手最快圈速")
-try:
-    fastest_data = results[['Abbreviation', 'FastestLapTime']].dropna()
-    fastest_data = fastest_data.copy()
-    fastest_data['Seconds'] = fastest_data['FastestLapTime'].dt.total_seconds()
-    fastest_data = fastest_data.sort_values('Seconds')
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.barh(fastest_data['Abbreviation'], fastest_data['Seconds'], color='#e10600')
-    ax.set_xlabel('Seconds')
-    ax.set_title('Fastest Lap by Driver')
-    ax.invert_yaxis()
-    st.pyplot(fig)
-except Exception as e:
-    st.warning(f"圈速資料無法顯示：{e}")
 
         st.subheader("名次變化")
         try:
@@ -137,7 +136,7 @@ except Exception as e:
         st.info("2017 年以前或圈速資料無法載入，僅顯示最終成績與賽事報告。")
 
     st.subheader("賽事報告")
-    results_text = results.to_string()
+    results_text = results.drop(columns=['FastestLapTime']).to_string()
     prompt = f"""
 你是一位 F1 賽事記者，請根據以下 {year} {race} GP 的真實資料，
 用繁體中文寫一篇約 400 字的詳細賽事報告。
