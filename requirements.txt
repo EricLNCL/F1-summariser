@@ -1,4 +1,4 @@
-fastf1
+fastf1==3.8.3
 streamlit
 matplotlib
 pandas
