@@ -67,9 +67,14 @@ elif st.button("產生賽事報告"):
         results = session.results[['Abbreviation', 'FullName', 'TeamName', 'Position', 'Status']].copy()
         results['Position'] = results['Position'].astype(str)
         if support_laps:
-            laps = session.laps
-        else:
+    try:
+        laps = session.laps
+        if laps is None or len(laps) == 0:
             laps = None
+    except Exception:
+        laps = None
+else:
+    laps = None
 
     st.subheader("最終成績")
     st.dataframe(results, width=800)
