@@ -3,10 +3,8 @@ import datetime
 import fastf1
 import streamlit as st
 import matplotlib.pyplot as plt
-import matplotlib
 import pandas as pd
 from groq import Groq
-
 
 os.makedirs('cache', exist_ok=True)
 fastf1.Cache.enable_cache('cache')
@@ -65,12 +63,7 @@ elif st.button("產生賽事報告"):
     with st.spinner("載入賽事資料中..."):
         session = fastf1.get_session(year, race, 'R')
         support_laps = year >= 2018
-        session.load(
-            laps=support_laps,
-            telemetry=False,
-            weather=False,
-            messages=support_laps
-        )
+        session.load()
         results = session.results[['Abbreviation', 'FullName', 'TeamName', 'Position', 'Status']].copy()
         results['Position'] = results['Position'].astype(str)
         if support_laps:
