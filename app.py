@@ -160,7 +160,7 @@ Pit Stop 與輪胎資料：
 """
     with st.spinner("正在撰寫賽事報告..."):
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
             messages=[{"role": "user", "content": prompt}]
         )
     st.write(response.choices[0].message.content)
