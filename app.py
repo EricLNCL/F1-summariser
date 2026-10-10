@@ -80,17 +80,19 @@ elif st.button("產生賽事報告"):
     if laps is not None:
 
         st.subheader("各車手最快圈速")
-        try:
-            fastest = laps.groupby('Driver')['LapTime'].min().dropna().sort_values()
-            fastest_sec = fastest.dt.total_seconds()
-            fig, ax = plt.subplots(figsize=(10, 5))
-            ax.barh(fastest_sec.index, fastest_sec.values, color='#e10600')
-            ax.set_xlabel('Seconds')
-            ax.set_title('Fastest Lap by Driver')
-            ax.invert_yaxis()
-            st.pyplot(fig)
-        except Exception as e:
-            st.warning(f"圈速資料無法顯示：{e}")
+try:
+    fastest_data = results[['Abbreviation', 'FastestLapTime']].dropna()
+    fastest_data = fastest_data.copy()
+    fastest_data['Seconds'] = fastest_data['FastestLapTime'].dt.total_seconds()
+    fastest_data = fastest_data.sort_values('Seconds')
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.barh(fastest_data['Abbreviation'], fastest_data['Seconds'], color='#e10600')
+    ax.set_xlabel('Seconds')
+    ax.set_title('Fastest Lap by Driver')
+    ax.invert_yaxis()
+    st.pyplot(fig)
+except Exception as e:
+    st.warning(f"圈速資料無法顯示：{e}")
 
         st.subheader("名次變化")
         try:
