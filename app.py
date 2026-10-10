@@ -1,11 +1,14 @@
+cat > app.py << 'ENDOFFILE'
 import os
 import datetime
 import fastf1
 import streamlit as st
 import matplotlib.pyplot as plt
+import matplotlib
 import pandas as pd
 from groq import Groq
 
+matplotlib.rcParams['font.family'] = 'Arial Unicode MS'
 os.makedirs('cache', exist_ok=True)
 fastf1.Cache.enable_cache('cache')
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
@@ -63,45 +66,39 @@ elif st.button("產生賽事報告"):
     with st.spinner("載入賽事資料中..."):
         session = fastf1.get_session(year, race, 'R')
         support_laps = year >= 2018
-        session.load(laps=support_laps, telemetry=False, weather=False, messages=support_laps)
-
-        base_cols = ['Abbreviation', 'FullName', 'TeamName', 'Position', 'Status']
-        has_fastest = 'FastestLapTime' in session.results.columns
-        if has_fastest:
-            base_cols.append('FastestLapTime')
-        results = session.results[base_cols].copy()
+        session.load(
+            laps=support_laps,
+            telemetry=False,
+            weather=False,
+            messages=support_laps
+        )
+        results = session.results[['Abbreviation', 'FullName', 'TeamName', 'Position', 'Status']].copy()
         results['Position'] = results['Position'].astype(str)
-
-        try:
-            laps = session.laps if support_laps else None
-        except Exception:
+        if support_laps:
+            laps = session.laps
+        else:
             laps = None
 
     st.subheader("最終成績")
-    display_cols = [c for c in base_cols if c != 'FastestLapTime']
-    st.dataframe(results[display_cols], width=800)
-
-    st.subheader("各車手最快圈速")
-    try:
-        if has_fastest:
-            fastest_data = results[['Abbreviation', 'FastestLapTime']].dropna().copy()
-            fastest_data['Seconds'] = fastest_data['FastestLapTime'].dt.total_seconds()
-        else:
-            raise ValueError("無最快圈速資料")
-        fastest_data = fastest_data.sort_values('Seconds')
-        fig, ax = plt.subplots(figsize=(10, 5))
-        ax.barh(fastest_data['Abbreviation'], fastest_data['Seconds'], color='#e10600')
-        ax.set_xlabel('Seconds')
-        ax.set_title('Fastest Lap by Driver')
-        ax.invert_yaxis()
-        st.pyplot(fig)
-    except Exception as e:
-        st.warning(f"圈速資料無法顯示：{e}")
+    st.dataframe(results, width=800)
 
     pit_text = "無資料"
     penalty_text = "無資料"
 
     if laps is not None:
+
+        st.subheader("各車手最快圈速")
+        try:
+            fastest = laps.groupby('Driver')['LapTime'].min().dropna().sort_values()
+            fastest_sec = fastest.dt.total_seconds()
+            fig, ax = plt.subplots(figsize=(10, 5))
+            ax.barh(fastest_sec.index, fastest_sec.values, color='#e10600')
+            ax.set_xlabel('秒數')
+            ax.set_title('各車手最快圈速')
+            ax.invert_yaxis()
+            st.pyplot(fig)
+        except Exception as e:
+            st.warning(f"圈速資料無法顯示：{e}")
 
         st.subheader("名次變化")
         try:
@@ -143,10 +140,10 @@ elif st.button("產生賽事報告"):
             st.warning(f"事故資料無法顯示：{e}")
 
     else:
-        st.info("2017 年以前或圈速資料無法載入，僅顯示最終成績與賽事報告。")
+        st.info("2017 年以前的圈速、Pit Stop、事故資料不支援，僅顯示最終成績與賽事報告。")
 
     st.subheader("賽事報告")
-    results_text = results[display_cols].to_string()
+    results_text = results.to_string()
     prompt = f"""
 你是一位 F1 賽事記者，請根據以下 {year} {race} GP 的真實資料，
 用繁體中文寫一篇約 400 字的詳細賽事報告。
@@ -171,7 +168,8 @@ Pit Stop 與輪胎資料：
 """
     with st.spinner("正在撰寫賽事報告..."):
         response = client.chat.completions.create(
-            model="openai/gpt-oss-120b",
+            model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}]
         )
     st.write(response.choices[0].message.content)
+ENDOFFILE
