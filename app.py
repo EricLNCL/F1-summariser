@@ -63,18 +63,13 @@ elif st.button("產生賽事報告"):
     with st.spinner("載入賽事資料中..."):
         session = fastf1.get_session(year, race, 'R')
         support_laps = year >= 2018
-        session.load(laps=True, telemetry=False, weather=False, messages=True)
+        session.load(laps=support_laps, telemetry=False, weather=False, messages=support_laps)
         results = session.results[['Abbreviation', 'FullName', 'TeamName', 'Position', 'Status']].copy()
         results['Position'] = results['Position'].astype(str)
-        if support_laps:
-    try:
-        laps = session.laps
-        if laps is None or len(laps) == 0:
+        try:
+            laps = session.laps if support_laps else None
+        except Exception:
             laps = None
-    except Exception:
-        laps = None
-else:
-    laps = None
 
     st.subheader("最終成績")
     st.dataframe(results, width=800)
@@ -137,7 +132,7 @@ else:
             st.warning(f"事故資料無法顯示：{e}")
 
     else:
-        st.info("2017 年以前的圈速、Pit Stop、事故資料不支援，僅顯示最終成績與賽事報告。")
+        st.info("2017 年以前或圈速資料無法載入，僅顯示最終成績與賽事報告。")
 
     st.subheader("賽事報告")
     results_text = results.to_string()
