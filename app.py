@@ -172,4 +172,3 @@ Pit Stop 與輪胎資料：
             messages=[{"role": "user", "content": prompt}]
         )
     st.write(response.choices[0].message.content)
-ENDOFFILE
